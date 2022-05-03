@@ -1,15 +1,19 @@
-"""main.py - The top-level code for ENPM661 Project 3"""
+"""main.py - The top-level code for ENPM661 Project 5"""
 
 
 import time
 
 import a_star
 import obstacle_map
+import rg_rrt
 import visualization
 
 
-# TODO - find this constant somewhere in the documentation
-TURTLEBOT_ROBOT_RADIUS = 0.089
+PROBE_RADIUS_M = 0.002
+
+LENGTH_WEIGHT = 1.0
+CLEARANCE_WEIGHT = 1.0
+RISK_WEIGHT = 1.0
 
 
 print("Please enter the start and goal poses as comma-separated integers, such as: 50, 220, 30")
@@ -30,27 +34,17 @@ goal_point = (goal_x, goal_y)
 
 # goal_point = (250, 100)
 
-rpm_str = input("Please enter the desired rpms: ")
-rpms = rpm_str.split(",")
-rpm1 = int(rpms[0])
-rpm2 = int(rpms[1])
-
-clearance_str = input("Finally, please enter the desired clearance: ")
-clearance = float(clearance_str.strip())
-
 print("Start point: " + str(start_point))
 print("Goal point: " + str(goal_point))
 
-
-o_map = obstacle_map.generate_obstacle_map(clearance + TURTLEBOT_ROBOT_RADIUS)
-# o_map = obstacle_map.generate_obstacle_map(0) # TODO - what should we put here?
+o_map = obstacle_map.generate_obstacle_map(PROBE_RADIUS_M)
 
 visualizer = visualization.PathPlanningVisualizer()
 visualizer.draw_obstacle_map(o_map)
 
-a = a_star.AStar(o_map, goal_point, rpm1, rpm2)
+a = rg_rrt.Rg_Rrt(obstacle_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
 t0 = time.time()
-path, cost, motor_inputs = a.generate_path(start_point, goal_point, lambda x: visualizer.draw_visited_node(x))
+path, cost = a.generate_path(start_point, goal_point, lambda x: visualizer.draw_visited_node(x))
 if path:
     print("Found a path from start to goal point!")
 
@@ -61,6 +55,3 @@ visualizer.write_video_file()
 
 # Allow enough time to finish flushing the buffer to the AVI output file.
 time.sleep(2)
-
-for motor_input in motor_inputs:
-    print(motor_input)
