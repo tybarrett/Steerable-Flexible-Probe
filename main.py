@@ -42,7 +42,7 @@ o_map = obstacle_map.generate_obstacle_map(PROBE_RADIUS_M)
 visualizer = visualization.PathPlanningVisualizer()
 visualizer.draw_obstacle_map(o_map)
 
-a = rg_rrt.Rg_Rrt(obstacle_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
+a = rg_rrt.Rg_Rrt(o_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
 t0 = time.time()
 path, cost = a.generate_path(start_point, goal_point, lambda x: visualizer.draw_visited_node(x))
 if path:

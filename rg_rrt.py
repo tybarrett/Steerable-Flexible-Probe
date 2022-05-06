@@ -28,12 +28,34 @@ class Rg_Rrt(object):
 
         reached_goal = False
 
+        existing_nodes = [start_pose]
+
         while not reached_goal:
             # Generate a random point
-            new_point_x, new_point_y = self.generate_random_point(goal_coordinate)
+            new_point = self.generate_random_point(goal_coordinate)
+            new_point_x, new_point_y = new_point
 
-            if self.obstacle_map.is_coordinate_occupied((new_point_x, new_point_y)):
-                continue
+            print("New Point: " + str(new_point))
+
+            points_and_lengths = []
+            for existing_node in existing_nodes:
+                connecting_points, arc_length = self.connect_with_curve(existing_node[0], theta, new_point)
+
+                if connecting_points:
+
+                    goes_through_obstacle = False
+                    for point in connecting_points:
+                        if self.obstacle_map.is_coordinate_occupied(point):
+                            goes_through_obstacle = True
+                            break
+
+                    if not goes_through_obstacle:
+                        points_and_lengths.append((connecting_points, arc_length))
+
+            sorted(points_and_lengths, key=lambda x: x[1])
+            if len(points_and_lengths):
+                update_callback(points_and_lengths[0][0])
+                print("Found a path that is " + points_and_lengths[0][1] + " nodes long")
 
             # Figure out which node to connect it to
             # by calculating the overall cost of the resulting path segment
@@ -46,6 +68,8 @@ class Rg_Rrt(object):
 
             reached_goal = self._get_distance((new_point_x, new_point_y), goal_coordinate) < GOAL_THRESHOLD
 
+        return [], -1 # TODO - implement this
+
 
     def generate_random_point(self, goal_coordinate):
         randomly_chose_goal = random.random() < 0.2
@@ -55,20 +79,20 @@ class Rg_Rrt(object):
 
         else:
             new_point_x = 3.0 * random.random()
-            new_point_y = 2.0 * random.random()
+            new_point_y = 1.0 * random.random()
             return new_point_x, new_point_y
 
 
     def connect_with_curve(self, p1, theta1, p2):
         x1, y1 = p1
         x2, y2 = p2
-        slope_towards_center = math.tan(theta1 + math.pi/2)
+        slope_towards_center = math.tan(theta1*math.pi/180 + math.pi/2)
         intercept = y1 - slope_towards_center * x1
 
         a1 = 1 / intercept
         b1 = -slope_towards_center / intercept
 
-        slope_bw_points = y2-y1 / x2-x1
+        slope_bw_points = (y2-y1) / (x2-x1)
         slope_eq_points = -1 * slope_bw_points**-1
         x_mid = (x2 + x1) / 2
         y_mid = (y2 + y1) / 2
@@ -82,7 +106,7 @@ class Rg_Rrt(object):
 
         radius = self._get_distance(p1, (x_intersect, y_intersect))
         if radius < MIN_CURVATURE_RADIUS:
-            return []
+            return [], -1
 
         angle_to_p1 = math.atan2(x1-x_intersect, y1-y_intersect)
         angle_to_p2 = math.atan2(x2-x_intersect, y2-y_intersect)
@@ -95,7 +119,7 @@ class Rg_Rrt(object):
 
             points.append((new_x, new_y))
 
-        return points
+        return points, radius * abs(angle_to_p1 - angle_to_p2)
 
 
     def _get_distance(self, p1, p2):
