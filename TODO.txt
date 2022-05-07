@@ -2,4 +2,18 @@
 + Finished Task
 
 TODO for Steerable Flexible Probe
--
+- Get cost from brain map
+- Finish implementing RG-RRT
+  - attach new nodes to the closest node in each tree
+  - execute with multiple trees
+  - introduce parameters as described in the paper
+    - max iterations
+    - number of multiple trees
+- Determine boundary of brain map
+  - and do not allow movement if it is outside the brain
+
+TODO for Original Research
+- Change start point to be at the tumor
+- Change goal condition to be any place outside the brain
+  - with a relatively orthogonal exit angle
+- Run multiple simulations to compare cost values
