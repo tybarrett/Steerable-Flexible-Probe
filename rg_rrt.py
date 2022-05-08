@@ -132,11 +132,16 @@ class Rg_Rrt(object):
         angle_to_p2 = math.atan2(y2 - y_intersect, x2 - x_intersect)
 
         points = []
-        for i in range(20):
-            # angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
+        first_angle = angle_to_p1
+        d_angle = (angle_to_p2 - angle_to_p1) / 20
 
-            first_angle = angle_to_p1
-            d_angle = (angle_to_p2 - angle_to_p1) / 20
+        # Check if we are moving in the opposite direction of the tip
+        tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
+        if abs(tip_angle - theta1 * math.pi / 180) > math.pi / 2:
+            return [], -1
+
+        for i in range(20):
+
             angle = first_angle + i * d_angle
 
             new_x = x_intersect + radius * math.cos(angle)

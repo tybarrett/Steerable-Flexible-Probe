@@ -118,10 +118,16 @@ def connect_with_curve(p1, theta1, p2):
 
     points = []
     print("Angle to p1: " + str(angle_to_p1))
+    first_angle = angle_to_p1
+    d_angle = (angle_to_p2 - angle_to_p1) / 20
+
+    # Check if we are moving in the opposite direction of the tip
+    tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
+    if abs(tip_angle - theta1*math.pi/180) > math.pi/2:
+        return [], -1
+
     for i in range(20):
 
-        first_angle = angle_to_p1
-        d_angle = (angle_to_p2 - angle_to_p1) / 20
         angle = first_angle + i * d_angle
 
         # angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
@@ -136,7 +142,7 @@ def connect_with_curve(p1, theta1, p2):
 
         points.append(new_node)
 
-    _reverse_points_if_necessary(points, p1)
+    # _reverse_points_if_necessary(points, p1)
 
     for pt in points:
         draw_circle(*pt.coordinates)
@@ -147,9 +153,10 @@ def connect_with_curve(p1, theta1, p2):
 canvas = numpy.zeros((100, 100, 3), dtype=numpy.uint8)
 
 
-points, arc_length = connect_with_curve((25, 50), 0.01, (75, 60))
+points, arc_length = connect_with_curve((75, 50), 0.01, (25, 60))
 
-final_angle = points[-1].theta
-print("Final angle: " + str(final_angle))
-print("Waiting now.")
-time.sleep(3)
+if points:
+    final_angle = points[-1].theta
+    print("Final angle: " + str(final_angle))
+    print("Waiting now.")
+    time.sleep(3)
