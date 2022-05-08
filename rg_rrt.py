@@ -41,8 +41,12 @@ class Rg_Rrt(object):
 
             print("New Point: " + str(new_point))
 
+            # TODO - trim existing_nodes first before sorting it
+            sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
+
             points_and_lengths = []
-            for existing_node in existing_nodes:
+            for existing_node in sorted_existing:
+
                 connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
 
                 if connecting_points:
@@ -57,7 +61,7 @@ class Rg_Rrt(object):
                     if not goes_through_obstacle:
                         points_and_lengths.append((connecting_points, arc_length))
 
-            sorted(points_and_lengths, key=lambda x: x[1])
+            # sorted(points_and_lengths, key=lambda x: x[1])
             if len(points_and_lengths):
                 print("Found a path that is " + str(points_and_lengths[0][1]) + " units long")
                 shortest_path = points_and_lengths[0][0]
@@ -68,19 +72,6 @@ class Rg_Rrt(object):
 
                 if new_point == goal_coordinate:
                     return self.backtrack(terminal_node), 0 # TODO - put a cost here
-
-            # Figure out which node to connect it to
-            # by calculating the overall cost of the resulting path segment
-                # IE cost of curve that would connect it to the existing curve + cost of already-established curve
-            # Also, do not connect it to a node if the resulting curve would intersect an obstacle
-
-            # Then, call our callback
-            # new_curve_points = []
-            # update_callback(new_curve_points)
-
-            # reached_goal = self._get_distance((new_point_x, new_point_y), goal_coordinate) < GOAL_THRESHOLD
-            # if reached_goal:
-            #     last_node =
 
         return [], -1 # TODO - implement this
 
@@ -133,14 +124,14 @@ class Rg_Rrt(object):
 
         points = []
         first_angle = angle_to_p1
-        d_angle = (angle_to_p2 - angle_to_p1) / 20
+        d_angle = (angle_to_p2 - angle_to_p1) / 40
 
         # Check if we are moving in the opposite direction of the tip
         tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
         if abs(tip_angle - theta1 * math.pi / 180) > math.pi / 2:
             return [], -1
 
-        for i in range(20):
+        for i in range(40):
 
             angle = first_angle + i * d_angle
 
