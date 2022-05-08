@@ -48,24 +48,33 @@ visualizer = visualization.PathPlanningVisualizer()
 visualizer.draw_obstacle_map(o_map)
 
 a = rg_rrt.Rg_Rrt(o_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
-t0 = time.time()
 
-solved_trees = []
-for _ in range(NUM_TREES):
+answers = []
+for solution_i in range(NUM_TREES):
+    t0 = time.time()
     solved_trees = a.generate_path(start_point, goal_point, lambda x: None)
 
     print("Found paths from start to goal point!")
     print("Time required: " + str(time.time() - t0))
+    print("Found solution #" + str(solution_i + 1))
     for solved_tree in solved_trees:
         path = solved_tree
         if path:
             print("Total cost for the path: " + str(path[-1].get_cost()))
             visualizer.draw_visited_node(path)
+            answers.append(solved_tree)
 
-sorted_trees = sorted(solved_trees, key=lambda x: x[-1].get_cost())
+sorted_trees = sorted(answers, key=lambda x: x[-1].get_cost())
 visualizer.draw_path(sorted_trees[0])
 
 visualizer.write_video_file()
+
+print("-"*20)
+for tree in sorted_trees:
+    print("Overall Cost: " + str(tree[-1].get_cost()))
+    print("\tTree length: " + str(tree[-1].cost_to_come))
+    print("\tTree risk: " + str(tree[-1].accumulated_risk))
+    print()
 
 # Allow enough time to finish flushing the buffer to the AVI output file.
 time.sleep(2)

@@ -50,6 +50,9 @@ class BrainObstacleMap(object):
         self.start = start
         self.goal = goal
 
+        self.scaled_img = self.scale_img()
+        self.obstacle_img = self.scaled_img[1]
+
         self.contours_drawn = None
 
     def detect_boundary_for_brain(self, image, bin_img):
@@ -96,6 +99,9 @@ class BrainObstacleMap(object):
         # + TO-DO Add margin and goal point
         x = int(x)
         y = int(y)
+
+        x *= 4
+        y *= 4
 
         if x < 0 or x > scaled_img.shape[1] - 1:
             return True

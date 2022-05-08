@@ -12,7 +12,7 @@ MARGIN_COLOR = (95, 153, 211)
 PATH_COLOR = (20, 255, 57)
 FREE_UNEXPLORED_COLOR = (230, 216, 173)
 FREE_EXPLORED_COLOR = (150, 146, 92)
-LINE_THICKNESS = 1
+LINE_THICKNESS = 2
 
 FRAMES_TO_SKIP = 0
 
@@ -21,7 +21,7 @@ OUTPUT_FPS = 30
 
 VISUALIZE = True
 
-GSD = 1
+GSD = 5
 
 
 class PathPlanningVisualizer(object):
@@ -39,7 +39,7 @@ class PathPlanningVisualizer(object):
         for x in range(canvas_width):
             for y in range(canvas_height):
 
-                obstacle_state = obstacle_map.is_coordinate_occupied(obstacle_map.img, x//GSD, y//GSD)
+                obstacle_state = obstacle_map.is_coordinate_occupied(obstacle_map.obstacle_img, x//GSD, y//GSD)
                 is_inside_brain = obstacle_map.is_coordinate_inside(x//GSD, y//GSD)
                 if obstacle_state or not is_inside_brain:
                     color = OBSTACLE_COLOR

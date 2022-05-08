@@ -37,12 +37,12 @@ class Rg_Rrt(object):
         solved_trees = []
 
         while len(solved_trees) < REQUIRED_SOLUTIONS:
-            print("")
+            # print("")
             # Generate a random point
             new_point = self.generate_random_point(goal_coordinate)
             new_point_x, new_point_y = new_point
 
-            print("New Point: " + str(new_point))
+            # print("New Point: " + str(new_point))
 
             # TODO - trim existing_nodes first before sorting it
             # sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
@@ -51,14 +51,14 @@ class Rg_Rrt(object):
             points_and_lengths = []
             for existing_node in sorted_existing:
 
-                print("Generating a new path")
+                # print("Generating a new path")
                 connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
 
                 if connecting_points:
 
                     goes_through_obstacle = False
                     for point in connecting_points:
-                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.img, point.coordinates[0], point.coordinates[1])
+                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.obstacle_img, point.coordinates[0], point.coordinates[1])
                         is_inside_brain = self.obstacle_map.is_coordinate_inside(point.coordinates[0], point.coordinates[1])
                         if is_coordinate_occupied or not is_inside_brain:
                             goes_through_obstacle = True
@@ -73,11 +73,11 @@ class Rg_Rrt(object):
 
             # sorted(points_and_lengths, key=lambda x: x[1])
             if len(points_and_lengths):
-                print("Found a path that is " + str(points_and_lengths[0][1]) + " units long")
+                # print("Found a path that is " + str(points_and_lengths[0][1]) + " units long")
                 shortest_path = points_and_lengths[0][0]
                 terminal_node = shortest_path[-1]
                 existing_nodes.append(terminal_node)
-                print("Adding a new node to the existing_nodes with a theta of " + str(terminal_node.theta))
+                # print("Adding a new node to the existing_nodes with a theta of " + str(terminal_node.theta))
                 update_callback(points_and_lengths[0][0])
 
                 if new_point == goal_coordinate:
@@ -151,7 +151,7 @@ class Rg_Rrt(object):
         next_point = (x_intersect + radius * math.cos(angle), y_intersect + radius * math.sin(angle))
         angle_of_movement = math.atan2(next_point[1] - y1, next_point[0] - x1)
         if abs(angle_of_movement - theta1 * math.pi / 180) > math.pi / 2:
-            print("We are moving in the wrong direction!")
+            # print("We are moving in the wrong direction!")
             # if angle_to_p1 < 0:
             #     angle_to_p1 += math.pi * 2
             # if angle_to_p2 < 0:
