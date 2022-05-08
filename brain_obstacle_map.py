@@ -44,6 +44,7 @@ test_coord_y = 50
 class BrainObstacleMap(object):
     def __init__(self, img, start, goal):
         self.img = img
+        self.height, self.width, _ = self.img.shape
         self.start = start
         self.goal = goal
 
@@ -82,21 +83,29 @@ class BrainObstacleMap(object):
         # if y < self.clearance_margin or y > self.height - self.clearance_margin:
         #     return IN_MARGIN
         # + TO-DO Add margin and goal point
-        if tuple(scaled_img[x, y]) == RED:
-            print('Point in Tumor...!')
-            print('x and y coordinates for Tumor are: ', (x, y))
+        x = int(x)
+        y = int(y)
+
+        if x < 0 or x > scaled_img.shape[1] - 1:
             return True
-        if tuple(scaled_img[x, y]) == GREEN:
-            print('This is the Start Point...!')
-            print('x and y coordinates for point are: ', (x, y))
+        if y < 0 or y > scaled_img.shape[0] - 1:
             return True
-        if tuple(scaled_img[x, y]) == WHITE:
-            print('Point in Obstacle...!')
-            print('x and y coordinates for Obstacle are: ', (x, y))
+
+        if tuple(scaled_img[y, x]) == RED:
+            # print('Point in Tumor...!')
+            # print('x and y coordinates for Tumor are: ', (x, y))
+            return True
+        if tuple(scaled_img[y, x]) == GREEN:
+            # print('This is the Start Point...!')
+            # print('x and y coordinates for point are: ', (x, y))
+            return True
+        if tuple(scaled_img[y, x]) == WHITE:
+            # print('Point in Obstacle...!')
+            # print('x and y coordinates for Obstacle are: ', (x, y))
             return True
         else:
-            print('point is in Free Space...!')
-            print('x and y coordinates for free point: ', (x, y))
+            # print('point is in Free Space...!')
+            # print('x and y coordinates for free point: ', (x, y))
             return False
 
     def get_cost_for_coordinate(self, scaled_img, x, y):
@@ -113,28 +122,28 @@ class BrainObstacleMap(object):
         Other regions - 0.6
 
         '''
-        if tuple(scaled_img[x, y]) == ACCESSIBLE:
+        if tuple(scaled_img[y, x]) == ACCESSIBLE:
             COST = 0
             print('Point in Accessible Space...!')
-        elif tuple(scaled_img[x, y]) == COMMON:
+        elif tuple(scaled_img[y, x]) == COMMON:
             COST = 0.1
             print('Point is in Common Space...!')
-        elif tuple(scaled_img[x, y]) == CAREFUL:
+        elif tuple(scaled_img[y, x]) == CAREFUL:
             COST = 0.7
             print('Point in Careful space...!')
-        elif tuple(scaled_img[x, y]) == WARNING:
+        elif tuple(scaled_img[y, x]) == WARNING:
             COST = 0.8
             print('Point is in Warning Space...!')
-        elif tuple(scaled_img[x, y]) == DANGEROUS:
+        elif tuple(scaled_img[y, x]) == DANGEROUS:
             COST = 0.9
             print('Point is in Dangerous Space...!')
-        elif tuple(scaled_img[x, y]) == AVOID:
+        elif tuple(scaled_img[y, x]) == AVOID:
             COST = 1
             print('Point is in Avoid Space...!')
-        elif tuple(scaled_img[x, y]) == RED:
+        elif tuple(scaled_img[y, x]) == RED:
             COST = 0
             print('Point is in the Tumor...!')
-        elif tuple(scaled_img[x, y]) == GREEN:
+        elif tuple(scaled_img[y, x]) == GREEN:
             COST = 0
             print('Point is in Start Position...!')
         else:

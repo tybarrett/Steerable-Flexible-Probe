@@ -21,7 +21,7 @@ OUTPUT_FPS = 30
 
 VISUALIZE = True
 
-GSD = 150
+GSD = 1
 
 
 class PathPlanningVisualizer(object):
@@ -39,16 +39,14 @@ class PathPlanningVisualizer(object):
         for x in range(canvas_width):
             for y in range(canvas_height):
 
-                obstacle_state = obstacle_map.is_coordinate_occupied((x/GSD, y/GSD))
-                if obstacle_state == IN_OBSTACLE:
+                obstacle_state = obstacle_map.is_coordinate_occupied(obstacle_map.img, x//GSD, y//GSD)
+                if obstacle_state:
                     color = OBSTACLE_COLOR
-                elif obstacle_state == IN_MARGIN:
-                    color = MARGIN_COLOR
                 else:
                     color = FREE_UNEXPLORED_COLOR
 
                 canvas_y = canvas_height - y - 1
-                self.canvas[canvas_y, x] = color
+                self.canvas[y, x] = color
 
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
         self.output_video = cv2.VideoWriter(OUTPUT_VIDEO_NAME, fourcc, OUTPUT_FPS, (self.canvas.shape[1], self.canvas.shape[0]))
@@ -64,12 +62,13 @@ class PathPlanningVisualizer(object):
             y = int(y * GSD)
 
             canvas_y = self.canvas.shape[0] - y - 1
-            new_coord = (x, canvas_y)
+            new_coord = (x, y)
 
             if visited_node.parent_node:
                 parent_x = int(visited_node.parent_node.coordinates[0] * GSD)
                 parent_y = int(visited_node.parent_node.coordinates[1] * GSD)
-                parent_coord = (parent_x, self.canvas.shape[0] - parent_y - 1)
+                # parent_coord = (parent_x, self.canvas.shape[0] - parent_y - 1)
+                parent_coord = (parent_x, parent_y)
 
                 cv2.line(self.canvas, new_coord, parent_coord, FREE_EXPLORED_COLOR, LINE_THICKNESS)
                 # self.canvas[canvas_y, x] = FREE_EXPLORED_COLOR
@@ -79,7 +78,7 @@ class PathPlanningVisualizer(object):
         if self.image_counter % (FRAMES_TO_SKIP+1) == 0:
             if VISUALIZE:
                 cv2.imshow("Canvas", self.canvas)
-                # cv2.waitKey(0)
+                cv2.waitKey(1)
 
             self._record_to_video()
 
@@ -94,7 +93,7 @@ class PathPlanningVisualizer(object):
             y = int(y * GSD)
 
             canvas_y = self.canvas.shape[0] - y - 1
-            this_point = (x, canvas_y)
+            this_point = (x, y)
 
             if last_point_drawn:
                 cv2.line(self.canvas, last_point_drawn, this_point, PATH_COLOR, LINE_THICKNESS)
@@ -113,3 +112,7 @@ class PathPlanningVisualizer(object):
         for _ in range(3 * OUTPUT_FPS):
             self._record_to_video()
         self.output_video.release()
+
+
+if __name__ == "__main__":
+    pass

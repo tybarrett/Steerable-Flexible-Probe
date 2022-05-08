@@ -53,7 +53,7 @@ class Rg_Rrt(object):
 
                     goes_through_obstacle = False
                     for point in connecting_points:
-                        if self.obstacle_map.is_coordinate_occupied(point.coordinates):
+                        if self.obstacle_map.is_coordinate_occupied(self.obstacle_map.img, point.coordinates[0], point.coordinates[1]):
                             goes_through_obstacle = True
                             print("Warning - this arc goes through an obstacle")
                             break
@@ -73,7 +73,7 @@ class Rg_Rrt(object):
                 if new_point == goal_coordinate:
                     return self.backtrack(terminal_node), 0 # TODO - put a cost here
 
-        return [], -1 # TODO - implement this
+        return solved_trees
 
 
     def generate_random_point(self, goal_coordinate):
@@ -83,7 +83,7 @@ class Rg_Rrt(object):
             return goal_coordinate
 
         else:
-            new_point_x = 3.0 * random.random()
+            new_point_x = 206 * random.random()
             new_point_y = 1.0 * random.random()
             return new_point_x, new_point_y
 
