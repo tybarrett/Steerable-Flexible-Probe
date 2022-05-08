@@ -66,8 +66,7 @@ class Rg_Rrt(object):
                             break
 
                         risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0], point.coordinates[1])
-                        print(risk)
-                        point.accumulated_risk = point.parent_node.accumulated_risk + risk
+                        point.accumulated_risk = point.parent_node.accumulated_risk + risk * self.risk_weight
 
                     if not goes_through_obstacle:
                         points_and_lengths.append((connecting_points, arc_length))
@@ -183,7 +182,7 @@ class Rg_Rrt(object):
         prev_node = p1
         for pt in points:
             pt.parent_node = prev_node
-            pt.cost_to_come = prev_node.cost_to_come + self._get_distance(prev_node.coordinates, pt.coordinates)
+            pt.cost_to_come = prev_node.cost_to_come + self._get_distance(prev_node.coordinates, pt.coordinates) * self.length_weight
             prev_node = pt
 
         return points, radius * abs(angle_to_p1 - angle_to_p2)
