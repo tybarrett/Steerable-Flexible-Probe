@@ -40,7 +40,8 @@ class PathPlanningVisualizer(object):
             for y in range(canvas_height):
 
                 obstacle_state = obstacle_map.is_coordinate_occupied(obstacle_map.img, x//GSD, y//GSD)
-                if obstacle_state:
+                is_inside_brain = obstacle_map.is_coordinate_inside(x//GSD, y//GSD)
+                if obstacle_state or not is_inside_brain:
                     color = OBSTACLE_COLOR
                 else:
                     color = FREE_UNEXPLORED_COLOR

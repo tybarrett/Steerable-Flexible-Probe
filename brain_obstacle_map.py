@@ -50,6 +50,8 @@ class BrainObstacleMap(object):
         self.start = start
         self.goal = goal
 
+        self.contours_drawn = None
+
     def detect_boundary_for_brain(self, image, bin_img):
         imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY)
@@ -58,6 +60,15 @@ class BrainObstacleMap(object):
         contours, hierarchy = cv2.findContours(
             thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(bin_img, contours[1:5], -1, BLUE, 2)
+
+        white_img = np.zeros([828, 828, 3], dtype=np.uint8)
+        white_img.fill(255)
+        stencil = np.zeros(white_img.shape).astype(white_img.dtype)
+        color = BLUE
+        cv2.fillPoly(stencil, contours[0:4], color)
+        self.inside_map = cv2.bitwise_and(white_img, stencil)
+        # cv2.imshow("result_final", result)
+
         return contours  # returns contours drawn
 
     def scale_img(self):
@@ -156,25 +167,39 @@ class BrainObstacleMap(object):
     def is_coordinate_inside_brain(self, contours, x, y):
         # Make new brain image with filled contours
         # white image
-        white_img = np.zeros([828, 828, 3], dtype=np.uint8)
-        white_img.fill(255)
-        stencil = np.zeros(white_img.shape).astype(white_img.dtype)
-        color = BLUE
-        cv2.fillPoly(stencil, contours[0:4], color)
-        result = cv2.bitwise_and(white_img, stencil)
+
+        # white_img = np.zeros([828, 828, 3], dtype=np.uint8)
+        # white_img.fill(255)
+        # stencil = np.zeros(white_img.shape).astype(white_img.dtype)
+        # color = BLUE
+        # cv2.fillPoly(stencil, contours[0:4], color)
+        # result = cv2.bitwise_and(white_img, stencil)
+
         # cv2.imshow("result_final", result)
         # cv2.waitKey(0)
 
         # check if coordinate is inside the brain or outside
-        if tuple(result[x, y]) == BLUE:
-            print('Point inside Brain...!')
+        if x < 0 or x > self.inside_map.shape[1] - 1:
+            return False
+        if y < 0 or y > self.inside_map.shape[0] - 1:
+            return False
+
+        if tuple(self.inside_map[y, x]) == BLUE:
+            # print('Point inside Brain...!')
             return True
-        elif tuple(result[x, y]) == BLACK:
-            print('Point is outside the Brain...!')
+        elif tuple(self.inside_map[y, x]) == BLACK:
+            # print('Point is outside the Brain...!')
             return False
         else:
-            print('Point is not able to identify its location...!')
+            # print('Point is not able to identify its location...!')
             return None
+
+    def is_coordinate_inside(self, test_coord_x, test_coord_y):
+        if self.contours_drawn == None:
+            self.scaled_img = self.scale_img()
+            self.contours_drawn = self.detect_boundary_for_brain(self.scaled_img[0], self.scaled_img[1])
+        return self.is_coordinate_inside_brain(self.contours_drawn, test_coord_x*4, test_coord_y*4)
+
 
 
 if __name__ == "__main__":
