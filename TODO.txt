@@ -3,14 +3,18 @@
 
 TODO for Steerable Flexible Probe
 - Get cost from brain map
+- Implement cost function
+  - with weights
 + Tune geometry to avoid divide-by-zero errors
 - Finish implementing RG-RRT
   + attach new nodes to the closest node in each tree
-  - execute with multiple trees
+  + execute with multiple trees
+    - might want to re-consult the paper and see exactly how they are doing things
   - introduce parameters as described in the paper
     - max iterations
     - number of multiple trees
 - Determine boundary of brain map
+  - write a method to see if a coordinate is inside the brain or not
   - and do not allow movement if it is outside the brain
 
 TODO for Original Research

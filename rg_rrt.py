@@ -8,6 +8,7 @@ from node_description import NodeDescription
 
 GOAL_THRESHOLD = 0.15
 MIN_CURVATURE_RADIUS = 0.5 # TODO - choose a realistic value
+REQUIRED_SOLUTIONS = 1
 
 
 class Rg_Rrt(object):
@@ -34,7 +35,9 @@ class Rg_Rrt(object):
 
         last_node = None
 
-        while not reached_goal:
+        solved_trees = []
+
+        while len(solved_trees) < REQUIRED_SOLUTIONS:
             # Generate a random point
             new_point = self.generate_random_point(goal_coordinate)
             new_point_x, new_point_y = new_point
@@ -55,7 +58,7 @@ class Rg_Rrt(object):
                     for point in connecting_points:
                         if self.obstacle_map.is_coordinate_occupied(self.obstacle_map.img, point.coordinates[0], point.coordinates[1]):
                             goes_through_obstacle = True
-                            print("Warning - this arc goes through an obstacle")
+                            # print("Warning - this arc goes through an obstacle")
                             break
 
                     if not goes_through_obstacle:
@@ -71,7 +74,12 @@ class Rg_Rrt(object):
                 update_callback(points_and_lengths[0][0])
 
                 if new_point == goal_coordinate:
-                    return self.backtrack(terminal_node), 0 # TODO - put a cost here
+                    first_node = shortest_path[0]
+                    parent = first_node.parent_node
+                    existing_nodes.remove(parent)
+
+                    solved_trees.append(self.backtrack(terminal_node))
+                    # return self.backtrack(terminal_node), 0 # TODO - put a cost here
 
         return solved_trees
 
@@ -84,7 +92,7 @@ class Rg_Rrt(object):
 
         else:
             new_point_x = 206 * random.random()
-            new_point_y = 1.0 * random.random()
+            new_point_y = 206 * random.random()
             return new_point_x, new_point_y
 
     def connect_with_curve(self, p1, p2):
