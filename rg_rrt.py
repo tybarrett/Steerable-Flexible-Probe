@@ -32,6 +32,8 @@ class Rg_Rrt(object):
         start_node = NodeDescription((start_x, start_y), theta)
         existing_nodes = [start_node]
 
+        last_node = None
+
         while not reached_goal:
             # Generate a random point
             new_point = self.generate_random_point(goal_coordinate)
@@ -42,9 +44,6 @@ class Rg_Rrt(object):
             points_and_lengths = []
             for existing_node in existing_nodes:
                 connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
-                for pt in connecting_points:
-                    print(pt)
-                update_callback(connecting_points)
 
                 if connecting_points:
 
@@ -52,6 +51,7 @@ class Rg_Rrt(object):
                     for point in connecting_points:
                         if self.obstacle_map.is_coordinate_occupied(point.coordinates):
                             goes_through_obstacle = True
+                            print("Warning - this arc goes through an obstacle")
                             break
 
                     if not goes_through_obstacle:
@@ -59,11 +59,15 @@ class Rg_Rrt(object):
 
             sorted(points_and_lengths, key=lambda x: x[1])
             if len(points_and_lengths):
-                shortest_path = points_and_lengths[0][0]
-                for pt in shortest_path:
-                    print(pt, end=", ")
                 print("Found a path that is " + str(points_and_lengths[0][1]) + " units long")
+                shortest_path = points_and_lengths[0][0]
+                terminal_node = shortest_path[-1]
+                existing_nodes.append(terminal_node)
+                print("Adding a new node to the existing_nodes with a theta of " + str(terminal_node.theta))
                 update_callback(points_and_lengths[0][0])
+
+                if new_point == goal_coordinate:
+                    return self.backtrack(terminal_node), 0 # TODO - put a cost here
 
             # Figure out which node to connect it to
             # by calculating the overall cost of the resulting path segment
@@ -71,10 +75,12 @@ class Rg_Rrt(object):
             # Also, do not connect it to a node if the resulting curve would intersect an obstacle
 
             # Then, call our callback
-            new_curve_points = []
-            update_callback(new_curve_points)
+            # new_curve_points = []
+            # update_callback(new_curve_points)
 
-            reached_goal = self._get_distance((new_point_x, new_point_y), goal_coordinate) < GOAL_THRESHOLD
+            # reached_goal = self._get_distance((new_point_x, new_point_y), goal_coordinate) < GOAL_THRESHOLD
+            # if reached_goal:
+            #     last_node =
 
         return [], -1 # TODO - implement this
 
@@ -126,21 +132,29 @@ class Rg_Rrt(object):
         angle_to_p2 = math.atan2(y2 - y_intersect, x2 - x_intersect)
 
         points = []
-        prev_node = p1
         for i in range(20):
-            angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
+            # angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
+
+            first_angle = angle_to_p1
+            d_angle = (angle_to_p2 - angle_to_p1) / 20
+            angle = first_angle + i * d_angle
+
             new_x = x_intersect + radius * math.cos(angle)
             new_y = y_intersect + radius * math.sin(angle)
 
-            tip_angle = angle + math.pi / 2
+            tip_angle = angle + (math.pi / 2) * (d_angle/abs(d_angle))
             tip_degrees = tip_angle * 180 / (math.pi * 2)
 
-            new_node = NodeDescription((new_x, new_y), tip_degrees, parent_node=prev_node)
-            prev_node = new_node
+            new_node = NodeDescription((new_x, new_y), tip_degrees)
 
             points.append(new_node)
 
         self._reverse_points_if_necessary(points, p1.coordinates)
+
+        prev_node = p1
+        for pt in points:
+            pt.parent_node = prev_node
+            prev_node = pt
 
         return points, radius * abs(angle_to_p1 - angle_to_p2)
 
@@ -159,3 +173,12 @@ class Rg_Rrt(object):
         dx = p1[0] - p2[0]
         dy = p1[1] - p2[1]
         return math.sqrt(dx**2 + dy**2)
+
+
+    def backtrack(self, goal_node):
+        backtrack_nodes = []
+        this_node = goal_node
+        while this_node:
+            backtrack_nodes.insert(0, this_node)
+            this_node = this_node.parent_node
+        return backtrack_nodes

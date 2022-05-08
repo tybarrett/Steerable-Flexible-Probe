@@ -6,7 +6,7 @@ from node_description import NodeDescription
 
 import cv2
 
-WAITKEY = 0
+WAITKEY = 1
 
 
 def _get_distance(p1, p2):
@@ -117,13 +117,20 @@ def connect_with_curve(p1, theta1, p2):
     angle_to_p2 = math.atan2(y2-y_intersect, x2-x_intersect)
 
     points = []
+    print("Angle to p1: " + str(angle_to_p1))
     for i in range(20):
-        angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
+
+        first_angle = angle_to_p1
+        d_angle = (angle_to_p2 - angle_to_p1) / 20
+        angle = first_angle + i * d_angle
+
+        # angle = min(angle_to_p1, angle_to_p2) + i * abs(angle_to_p1 - angle_to_p2) / 20
         new_x = x_intersect + radius * math.cos(angle)
         new_y = y_intersect + radius * math.sin(angle)
 
-        tip_angle = angle + math.pi / 2
-        tip_degrees = tip_angle * 180 / (math.pi *2)
+        tip_angle = angle + (math.pi / 2) * (d_angle/abs(d_angle))
+        tip_degrees = tip_angle * 180 / math.pi
+        print("Tip angle: " + str(tip_degrees))
 
         new_node = NodeDescription((new_x, new_y), tip_degrees)
 
@@ -140,6 +147,9 @@ def connect_with_curve(p1, theta1, p2):
 canvas = numpy.zeros((100, 100, 3), dtype=numpy.uint8)
 
 
-connect_with_curve((40, 40), 0.01, (90, 40))
+points, arc_length = connect_with_curve((25, 50), 0.01, (75, 60))
+
+final_angle = points[-1].theta
+print("Final angle: " + str(final_angle))
 print("Waiting now.")
-time.sleep(5)
+time.sleep(3)
