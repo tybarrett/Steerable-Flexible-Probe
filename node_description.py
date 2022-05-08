@@ -22,7 +22,8 @@ class NodeDescription(object):
 
 
     def get_cost(self):
-        return self.cost_to_come + self.cost_to_go
+        return self.cost_to_come + self.accumulated_risk
+    # TODO - include distance from obstacles metric in here
 
 
     def __eq__(self, other):
