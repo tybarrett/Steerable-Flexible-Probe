@@ -36,6 +36,13 @@ class Rg_Rrt(object):
 
         solved_trees = []
 
+        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.obstacle_img,
+                                                                          start_node.coordinates[0], start_node.coordinates[1])
+        is_inside_brain = self.obstacle_map.is_coordinate_inside(start_node.coordinates[0], start_node.coordinates[1])
+        if is_coordinate_occupied or not is_inside_brain:
+            print("Not a valid start point!")
+            return [], 0
+
         while len(solved_trees) < REQUIRED_SOLUTIONS:
             # print("")
             # Generate a random point
@@ -151,12 +158,13 @@ class Rg_Rrt(object):
         next_point = (x_intersect + radius * math.cos(angle), y_intersect + radius * math.sin(angle))
         angle_of_movement = math.atan2(next_point[1] - y1, next_point[0] - x1)
         if abs(angle_of_movement - theta1 * math.pi / 180) > math.pi / 2:
-            # print("We are moving in the wrong direction!")
+            print("We are moving in the wrong direction!")
             # if angle_to_p1 < 0:
             #     angle_to_p1 += math.pi * 2
             # if angle_to_p2 < 0:
             #     angle_to_p2 += math.pi * 2
             # d_angle = (angle_to_p2 - angle_to_p1) / 40
+            d_angle = (angle_to_p1 - angle_to_p2) / 40
             return [], 0
 
         for i in range(41):
