@@ -8,7 +8,7 @@ from node_description import NodeDescription
 
 GOAL_THRESHOLD = 0.15
 MIN_CURVATURE_RADIUS = 0.5 # TODO - choose a realistic value
-REQUIRED_SOLUTIONS = 5
+REQUIRED_SOLUTIONS = 1
 
 
 class Rg_Rrt(object):
@@ -38,6 +38,7 @@ class Rg_Rrt(object):
         solved_trees = []
 
         while len(solved_trees) < REQUIRED_SOLUTIONS:
+            print("")
             # Generate a random point
             new_point = self.generate_random_point(goal_coordinate)
             new_point_x, new_point_y = new_point
@@ -50,6 +51,7 @@ class Rg_Rrt(object):
             points_and_lengths = []
             for existing_node in sorted_existing:
 
+                print("Generating a new path")
                 connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
 
                 if connecting_points:
@@ -145,11 +147,12 @@ class Rg_Rrt(object):
         angle_of_movement = math.atan2(next_point[1] - y1, next_point[0] - x1)
         if abs(angle_of_movement - theta1 * math.pi / 180) > math.pi / 2:
             print("We are moving in the wrong direction!")
-            if angle_to_p1 < 0:
-                angle_to_p1 += math.pi * 2
-            if angle_to_p2 < 0:
-                angle_to_p2 += math.pi * 2
-            d_angle = (angle_to_p2 - angle_to_p1) / 40
+            # if angle_to_p1 < 0:
+            #     angle_to_p1 += math.pi * 2
+            # if angle_to_p2 < 0:
+            #     angle_to_p2 += math.pi * 2
+            # d_angle = (angle_to_p2 - angle_to_p1) / 40
+            return [], 0
 
         for i in range(41):
 
@@ -162,6 +165,8 @@ class Rg_Rrt(object):
             tip_degrees = tip_angle * 180 / math.pi
             if tip_degrees > 180:
                 tip_degrees -= 360
+            if tip_degrees < -180:
+                tip_degrees += 360
 
             new_node = NodeDescription((new_x, new_y), tip_degrees)
 

@@ -133,12 +133,12 @@ def connect_with_curve(p1, theta1, p2):
     angle_of_movement = math.atan2(next_point[1]-y1, next_point[0]-x1)
     if abs(angle_of_movement - theta1*math.pi/180) > math.pi/2:
         print("We are moving in the wrong direction!")
-        if angle_to_p1 < 0:
-            angle_to_p1 += math.pi*2
-        if angle_to_p2 < 0:
-            angle_to_p2 += math.pi*2
-        d_angle = (angle_to_p2 - angle_to_p1) / 20
-        # return [], -1
+        # if angle_to_p1 < 0:
+        #     angle_to_p1 += math.pi*2
+        # if angle_to_p2 < 0:
+        #     angle_to_p2 += math.pi*2
+        # d_angle = (angle_to_p2 - angle_to_p1) / 20
+        return [], -1
 
     for i in range(21):
 

@@ -33,7 +33,7 @@ start_point = (10, 100), 0.01
 # goal_y = float(goal_coord[1].strip())
 # goal_point = (goal_x, goal_y)
 
-goal_point = (200, 50)
+goal_point = (103, 50)
 
 print("Start point: " + str(start_point))
 print("Goal point: " + str(goal_point))
