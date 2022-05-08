@@ -8,7 +8,7 @@ from node_description import NodeDescription
 
 GOAL_THRESHOLD = 0.15
 MIN_CURVATURE_RADIUS = 0.5 # TODO - choose a realistic value
-REQUIRED_SOLUTIONS = 1
+REQUIRED_SOLUTIONS = 2
 
 
 class Rg_Rrt(object):
@@ -58,7 +58,9 @@ class Rg_Rrt(object):
 
                     goes_through_obstacle = False
                     for point in connecting_points:
-                        if self.obstacle_map.is_coordinate_occupied(self.obstacle_map.img, point.coordinates[0], point.coordinates[1]):
+                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.img, point.coordinates[0], point.coordinates[1])
+                        is_inside_brain = self.obstacle_map.is_coordinate_inside(point.coordinates[0], point.coordinates[1])
+                        if is_coordinate_occupied or not is_inside_brain:
                             goes_through_obstacle = True
                             # print("Warning - this arc goes through an obstacle")
                             break

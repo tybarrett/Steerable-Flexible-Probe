@@ -195,6 +195,10 @@ class BrainObstacleMap(object):
             return None
 
     def is_coordinate_inside(self, test_coord_x, test_coord_y):
+
+        test_coord_x = int(test_coord_x)
+        test_coord_y = int(test_coord_y)
+
         if self.contours_drawn == None:
             self.scaled_img = self.scale_img()
             self.contours_drawn = self.detect_boundary_for_brain(self.scaled_img[0], self.scaled_img[1])
