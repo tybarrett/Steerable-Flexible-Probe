@@ -6,7 +6,7 @@ from node_description import NodeDescription
 
 import cv2
 
-WAITKEY = 1
+WAITKEY = 0
 
 
 def _get_distance(p1, p2):
@@ -92,17 +92,21 @@ def connect_with_curve(p1, theta1, p2):
 
     x_mid = (x2 + x1) / 2
     y_mid = (y2 + y1) / 2
-    slope_bw_points = (y2-y1) / (x2-x1)
-    if slope_bw_points == 0:
-        a2 = 1 / x_mid
-        b2 = 0
+    if x2 == x1:
+        a2 = 0
+        b2 = 1 / y_mid
     else:
-        slope_eq_points = -1 * slope_bw_points**-1
+        slope_bw_points = (y2-y1) / (x2-x1)
+        if slope_bw_points == 0:
+            a2 = 1 / x_mid
+            b2 = 0
+        else:
+            slope_eq_points = -1 * slope_bw_points**-1
 
-        intercept_eq = y_mid - slope_eq_points * x_mid
+            intercept_eq = y_mid - slope_eq_points * x_mid
 
-        a2 = -slope_eq_points / intercept_eq
-        b2 = 1 / intercept_eq
+            a2 = -slope_eq_points / intercept_eq
+            b2 = 1 / intercept_eq
 
     draw_line(a2, b2)
 
@@ -111,6 +115,7 @@ def connect_with_curve(p1, theta1, p2):
 
     radius = _get_distance(p1, (x_intersect, y_intersect))
     if radius < 0.5:
+        print("The movement radius is too small.")
         return [], -1
 
     angle_to_p1 = math.atan2(y1-y_intersect, x1-x_intersect)
@@ -122,11 +127,20 @@ def connect_with_curve(p1, theta1, p2):
     d_angle = (angle_to_p2 - angle_to_p1) / 20
 
     # Check if we are moving in the opposite direction of the tip
-    tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
-    if abs(tip_angle - theta1*math.pi/180) > math.pi/2:
-        return [], -1
+    # tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
+    angle = first_angle + d_angle
+    next_point = (x_intersect + radius * math.cos(angle), y_intersect + radius * math.sin(angle))
+    angle_of_movement = math.atan2(next_point[1]-y1, next_point[0]-x1)
+    if abs(angle_of_movement - theta1*math.pi/180) > math.pi/2:
+        print("We are moving in the wrong direction!")
+        if angle_to_p1 < 0:
+            angle_to_p1 += math.pi*2
+        if angle_to_p2 < 0:
+            angle_to_p2 += math.pi*2
+        d_angle = (angle_to_p2 - angle_to_p1) / 20
+        # return [], -1
 
-    for i in range(20):
+    for i in range(21):
 
         angle = first_angle + i * d_angle
 
@@ -136,6 +150,8 @@ def connect_with_curve(p1, theta1, p2):
 
         tip_angle = angle + (math.pi / 2) * (d_angle/abs(d_angle))
         tip_degrees = tip_angle * 180 / math.pi
+        if tip_degrees > 180:
+            tip_degrees -= 360
         print("Tip angle: " + str(tip_degrees))
 
         new_node = NodeDescription((new_x, new_y), tip_degrees)
@@ -153,7 +169,7 @@ def connect_with_curve(p1, theta1, p2):
 canvas = numpy.zeros((100, 100, 3), dtype=numpy.uint8)
 
 
-points, arc_length = connect_with_curve((75, 50), 0.01, (25, 60))
+points, arc_length = connect_with_curve((10, 90), 0.1, (10, 10))
 
 if points:
     final_angle = points[-1].theta

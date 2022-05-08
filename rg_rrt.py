@@ -8,7 +8,7 @@ from node_description import NodeDescription
 
 GOAL_THRESHOLD = 0.15
 MIN_CURVATURE_RADIUS = 0.5 # TODO - choose a realistic value
-REQUIRED_SOLUTIONS = 1
+REQUIRED_SOLUTIONS = 5
 
 
 class Rg_Rrt(object):
@@ -108,17 +108,21 @@ class Rg_Rrt(object):
 
         x_mid = (x2 + x1) / 2
         y_mid = (y2 + y1) / 2
-        slope_bw_points = (y2 - y1) / (x2 - x1)
-        if slope_bw_points == 0:
-            a2 = 1 / x_mid
-            b2 = 0
+        if x2 == x1:
+            a2 = 0
+            b2 = 1 / y_mid
         else:
-            slope_eq_points = -1 * slope_bw_points ** -1
+            slope_bw_points = (y2 - y1) / (x2 - x1)
+            if slope_bw_points == 0:
+                a2 = 1 / x_mid
+                b2 = 0
+            else:
+                slope_eq_points = -1 * slope_bw_points ** -1
 
-            intercept_eq = y_mid - slope_eq_points * x_mid
+                intercept_eq = y_mid - slope_eq_points * x_mid
 
-            a2 = -slope_eq_points / intercept_eq
-            b2 = 1 / intercept_eq
+                a2 = -slope_eq_points / intercept_eq
+                b2 = 1 / intercept_eq
 
         x_intersect = (b2 - b1) / (a1 * b2 - a2 * b1)
         y_intersect = (a1 - a2) / (a1 * b2 - a2 * b1)
@@ -135,11 +139,19 @@ class Rg_Rrt(object):
         d_angle = (angle_to_p2 - angle_to_p1) / 40
 
         # Check if we are moving in the opposite direction of the tip
-        tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
-        if abs(tip_angle - theta1 * math.pi / 180) > math.pi / 2:
-            return [], -1
+        # tip_angle = first_angle + (math.pi / 2) * (d_angle / abs(d_angle))
+        angle = first_angle + d_angle
+        next_point = (x_intersect + radius * math.cos(angle), y_intersect + radius * math.sin(angle))
+        angle_of_movement = math.atan2(next_point[1] - y1, next_point[0] - x1)
+        if abs(angle_of_movement - theta1 * math.pi / 180) > math.pi / 2:
+            print("We are moving in the wrong direction!")
+            if angle_to_p1 < 0:
+                angle_to_p1 += math.pi * 2
+            if angle_to_p2 < 0:
+                angle_to_p2 += math.pi * 2
+            d_angle = (angle_to_p2 - angle_to_p1) / 40
 
-        for i in range(40):
+        for i in range(41):
 
             angle = first_angle + i * d_angle
 
@@ -147,13 +159,15 @@ class Rg_Rrt(object):
             new_y = y_intersect + radius * math.sin(angle)
 
             tip_angle = angle + (math.pi / 2) * (d_angle/abs(d_angle))
-            tip_degrees = tip_angle * 180 / (math.pi * 2)
+            tip_degrees = tip_angle * 180 / math.pi
+            if tip_degrees > 180:
+                tip_degrees -= 360
 
             new_node = NodeDescription((new_x, new_y), tip_degrees)
 
             points.append(new_node)
 
-        self._reverse_points_if_necessary(points, p1.coordinates)
+        # self._reverse_points_if_necessary(points, p1.coordinates)
 
         prev_node = p1
         for pt in points:
