@@ -133,6 +133,10 @@ class BrainObstacleMap(object):
         Other regions - 0.6
 
         '''
+
+        x = int(x)
+        y = int(y)
+
         if tuple(scaled_img[y, x]) == ACCESSIBLE:
             COST = 0
             print('Point in Accessible Space...!')

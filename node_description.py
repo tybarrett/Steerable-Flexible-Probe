@@ -18,6 +18,8 @@ class NodeDescription(object):
         self.ul = ul
         self.ur = ur
 
+        self.accumulated_risk = 0
+
 
     def get_cost(self):
         return self.cost_to_come + self.cost_to_go

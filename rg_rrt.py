@@ -7,16 +7,16 @@ from node_description import NodeDescription
 
 
 GOAL_THRESHOLD = 0.15
-MIN_CURVATURE_RADIUS = 0.5 # TODO - choose a realistic value
-REQUIRED_SOLUTIONS = 2
+MIN_CURVATURE_RADIUS = 40 # TODO - choose a realistic value
+REQUIRED_SOLUTIONS = 1
 
 
 class Rg_Rrt(object):
     def __init__(self, obstacle_map, length_weight, clearance_weight, risk_weight):
         self.obstacle_map = obstacle_map
-        self.open = []
-        self.closed = closed_nodes_maintainer.ClosedNodesMaintainer(0.1, self.obstacle_map.width,
-                                                                    self.obstacle_map.height)
+        self.length_weight = length_weight
+        self.clearance_weight = clearance_weight
+        self.risk_weight = risk_weight
 
         # self.traverser = diff_drive_traverser.DiffDriveTraverser(obstacle_map, goal_coordinate)
 
@@ -24,7 +24,6 @@ class Rg_Rrt(object):
 
 
     def generate_path(self, start_pose, goal_coordinate, update_callback):
-
         (start_x, start_y), theta = start_pose
         goal_x, goal_y = goal_coordinate
 
@@ -46,7 +45,8 @@ class Rg_Rrt(object):
             print("New Point: " + str(new_point))
 
             # TODO - trim existing_nodes first before sorting it
-            sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
+            # sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
+            sorted_existing = sorted(existing_nodes, key=lambda node: node.cost_to_come + self._get_distance(node.coordinates, new_point))
 
             points_and_lengths = []
             for existing_node in sorted_existing:
@@ -64,6 +64,10 @@ class Rg_Rrt(object):
                             goes_through_obstacle = True
                             # print("Warning - this arc goes through an obstacle")
                             break
+
+                        risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0], point.coordinates[1])
+                        print(risk)
+                        point.accumulated_risk = point.parent_node.accumulated_risk + risk
 
                     if not goes_through_obstacle:
                         points_and_lengths.append((connecting_points, arc_length))
@@ -179,6 +183,7 @@ class Rg_Rrt(object):
         prev_node = p1
         for pt in points:
             pt.parent_node = prev_node
+            pt.cost_to_come = prev_node.cost_to_come + self._get_distance(prev_node.coordinates, pt.coordinates)
             prev_node = pt
 
         return points, radius * abs(angle_to_p1 - angle_to_p2)

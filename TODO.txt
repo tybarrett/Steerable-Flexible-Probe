@@ -12,10 +12,10 @@ TODO for Steerable Flexible Probe
     - might want to re-consult the paper and see exactly how they are doing things
   - introduce parameters as described in the paper
     - max iterations
-    - number of multiple trees
-- Determine boundary of brain map
-  - write a method to see if a coordinate is inside the brain or not
-  - and do not allow movement if it is outside the brain
+    + number of multiple trees
++ Determine boundary of brain map
+  + write a method to see if a coordinate is inside the brain or not
+  + and do not allow movement if it is outside the brain
 
 TODO for Original Research
 - Change start point to be at the tumor

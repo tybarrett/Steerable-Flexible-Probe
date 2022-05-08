@@ -33,7 +33,7 @@ start_point = (10, 100), 0.01
 # goal_y = float(goal_coord[1].strip())
 # goal_point = (goal_x, goal_y)
 
-goal_point = (103, 50)
+goal_point = (153, 50)
 
 print("Start point: " + str(start_point))
 print("Goal point: " + str(goal_point))
@@ -45,6 +45,8 @@ o_map = brain_obstacle_map.BrainObstacleMap(input_img, None, None)
 
 visualizer = visualization.PathPlanningVisualizer()
 visualizer.draw_obstacle_map(o_map)
+cv2.imshow("image", o_map.img)
+cv2.waitKey(0)
 
 a = rg_rrt.Rg_Rrt(o_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
 t0 = time.time()
@@ -55,6 +57,10 @@ print("Time required: " + str(time.time() - t0))
 for solved_tree in solved_trees:
     path = solved_tree
     if path:
+        cost = path[-1].cost_to_come
+        risk = path[-1].accumulated_risk
+        print("Total distance for the path: " + str(cost))
+        print("Total risk for the path: " + str(risk))
         visualizer.draw_path(path)
 
 visualizer.write_video_file()
