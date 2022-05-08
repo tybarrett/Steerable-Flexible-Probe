@@ -11,11 +11,8 @@ Obstacle :
 
 # + TO-DO Set clearance for tumor?? pixel is center or boundary of tumor
 """
-
-
 # import math
 # import numpy as np
-from tracemalloc import start
 import cv2
 
 
@@ -23,14 +20,24 @@ IN_MARGIN = 1
 IN_OBSTACLE = 2
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
+BLUE = (255, 255, 0)
 WHITE = (255, 255, 255)
+# Obstacle map colors
+ACCESSIBLE = (0, 0, 0)
+COMMON = (50, 50, 50)
+CAREFUL = (51, 51, 51)
+WARNING = (128, 128, 128)
+DANGEROUS = (179, 179, 179)
+AVOID = WHITE
 # scaleX is scale factor in x direction
 # scaleY is scale factor in y direction
 SCALE_X = 0.8
 SCALE_Y = 0.8
 START = (50, 50)
 GOAL = (200, 200)
-
+COST = None
+test_coord_x = 50
+test_coord_y = 50
 # This class is specific to Project 5
 
 
@@ -40,9 +47,24 @@ class BrainObstacleMap(object):
         self.start = start
         self.goal = goal
 
+    def detect_boundary_for_brain(self, image):
+        imgray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        ret, thresh = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY)
+        # cv2.imshow('thresh', thresh)
+        # cv2.waitKey(0)
+        contours, hierarchy = cv2.findContours(
+            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(image, contours[1:5], -1, BLUE, 2)
+        # cv2.imshow('image', image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
     def scale_img(self):
-        x_s, y_s = self.start
-        x_g, y_g = self.goal
+        # scales up the normal image input
+        scaleUpImg_input = cv2.resize(self.img, None, fx=SCALE_X*5,
+                                      fy=SCALE_Y*5, interpolation=cv2.INTER_LINEAR)
+       
+        # cv2.imshow("Scaled Up Input Image", scaleUpImg_input)
 
         ret, bin_img = cv2.threshold(self.img, 100, 255, cv2.THRESH_BINARY)
         scaleUpImg = cv2.resize(bin_img, None, fx=SCALE_X*5,
@@ -50,10 +72,8 @@ class BrainObstacleMap(object):
 
         print('Scaled image x: ', scaleUpImg.shape[0])
         print('Scaled image y: ', scaleUpImg.shape[1])
-        scaleUpImg[x_s, y_s] = GREEN  # START SET
-        scaleUpImg[x_g, y_g] = RED  # GOAL SET
-        cv2.imshow("Scaled Up", scaleUpImg)
-        return scaleUpImg
+        # cv2.imshow("Scaled Up Binary Image", scaleUpImg)
+        return scaleUpImg_input, scaleUpImg
 
     def is_coordinate_occupied(self, scaled_img, x, y):
 
@@ -63,15 +83,13 @@ class BrainObstacleMap(object):
         #     return IN_MARGIN
         # + TO-DO Add margin and goal point
         if tuple(scaled_img[x, y]) == RED:
-            # TO-DO Add range of reds to fetect tumour? Scale up causes color to expand aroudn pixels
             print('Point in Tumor...!')
             print('x and y coordinates for Tumor are: ', (x, y))
             return True
         if tuple(scaled_img[x, y]) == GREEN:
-            # TO-DO Add range of reds to fetect tumour? Scale up causes color to expand aroudn pixels
             print('This is the Start Point...!')
-            print('x and y coordinates for Tumor are: ', (x, y))
-            return True    
+            print('x and y coordinates for point are: ', (x, y))
+            return True
         if tuple(scaled_img[x, y]) == WHITE:
             print('Point in Obstacle...!')
             print('x and y coordinates for Obstacle are: ', (x, y))
@@ -81,14 +99,72 @@ class BrainObstacleMap(object):
             print('x and y coordinates for free point: ', (x, y))
             return False
 
+    def get_cost_for_coordinate(self, scaled_img, x, y):
+        '''
+        returns cost for pixel between 0-1, 1 being a 
+        'no-go' area and 0 being 'good-to-go' area
+
+        Accessible - 0
+        Common - 0.1
+        Careful - 0.7
+        Warning - 0.8
+        Dangerous - 0.9
+        Avoid - 1
+        Other regions - 0.6
+
+        '''
+        if tuple(scaled_img[x, y]) == ACCESSIBLE:
+            COST = 0
+            print('Point in Accessible Space...!')
+        elif tuple(scaled_img[x, y]) == COMMON:
+            COST = 0.1
+            print('Point is in Common Space...!')
+        elif tuple(scaled_img[x, y]) == CAREFUL:
+            COST = 0.7
+            print('Point in Careful space...!')
+        elif tuple(scaled_img[x, y]) == WARNING:
+            COST = 0.8
+            print('Point is in Warning Space...!')
+        elif tuple(scaled_img[x, y]) == DANGEROUS:
+            COST = 0.9
+            print('Point is in Dangerous Space...!')
+        elif tuple(scaled_img[x, y]) == AVOID:
+            COST = 1
+            print('Point is in Avoid Space...!')
+        elif tuple(scaled_img[x, y]) == RED:
+            COST = 0
+            print('Point is in the Tumor...!')
+        elif tuple(scaled_img[x, y]) == GREEN:
+            COST = 0
+            print('Point is in Start Position...!')
+        else:
+            COST = 0.6
+            print('point is in other region...!')
+
+        # print('x and y coordinates for point are: ', (x, y))
+        return COST
+
 
 if __name__ == "__main__":
-    input_img = cv2.imread('Steerable-Flexible-Probe/data/brain.png')
-    cv2.imshow("original image", input_img)
+    x_s, y_s = START
+    x_g, y_g = GOAL
+    input_img = cv2.imread('data/brain.png')
     map = BrainObstacleMap(input_img, START, GOAL)
     scaled_img = map.scale_img()
-    result = map.is_coordinate_occupied(scaled_img, 50, 50)
-    print("Is coordinate occupied?")
-    print(result)
+    map.detect_boundary_for_brain(scaled_img[0])
+    scaled_img[0][x_s, y_s] = GREEN  # START SET input img
+    scaled_img[0][x_g, y_g] = RED  # GOAL SET
+    scaled_img[1][x_s, y_s] = GREEN  # START SET binary img
+    scaled_img[1][x_g, y_g] = RED  # GOAL SET
+    cv2.imshow("Scaled Up Input Image", scaled_img[0])
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    result = map.is_coordinate_occupied(
+        scaled_img[1], test_coord_x, test_coord_y)
+    print("Is coordinate occupied?")
+    print(result)
+    cost = map.get_cost_for_coordinate(
+        scaled_img[0], test_coord_x, test_coord_y)
+    print("Cost of the coordinate?")
+    print(cost)
+    
