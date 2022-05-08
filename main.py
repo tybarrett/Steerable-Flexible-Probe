@@ -16,6 +16,7 @@ LENGTH_WEIGHT = 1.0
 CLEARANCE_WEIGHT = 1.0
 RISK_WEIGHT = 1.0
 
+NUM_TREES = 20
 
 # print("Please enter the start and goal poses as comma-separated integers, such as: 50, 220, 30")
 # start_point_str = input("Please input the starting point and orientation: ")
@@ -45,23 +46,24 @@ o_map = brain_obstacle_map.BrainObstacleMap(input_img, None, None)
 
 visualizer = visualization.PathPlanningVisualizer()
 visualizer.draw_obstacle_map(o_map)
-cv2.imshow("image", o_map.img)
-cv2.waitKey(0)
 
 a = rg_rrt.Rg_Rrt(o_map, LENGTH_WEIGHT, CLEARANCE_WEIGHT, RISK_WEIGHT)
 t0 = time.time()
-solved_trees = a.generate_path(start_point, goal_point, lambda x: visualizer.draw_visited_node(x))
 
-print("Found paths from start to goal point!")
-print("Time required: " + str(time.time() - t0))
-for solved_tree in solved_trees:
-    path = solved_tree
-    if path:
-        cost = path[-1].cost_to_come
-        risk = path[-1].accumulated_risk
-        print("Total distance for the path: " + str(cost))
-        print("Total risk for the path: " + str(risk))
-        visualizer.draw_path(path)
+solved_trees = []
+for _ in range(NUM_TREES):
+    solved_trees = a.generate_path(start_point, goal_point, lambda x: None)
+
+    print("Found paths from start to goal point!")
+    print("Time required: " + str(time.time() - t0))
+    for solved_tree in solved_trees:
+        path = solved_tree
+        if path:
+            print("Total cost for the path: " + str(path[-1].get_cost()))
+            visualizer.draw_visited_node(path)
+
+sorted_trees = sorted(solved_trees, key=lambda x: x[-1].get_cost())
+visualizer.draw_path(sorted_trees[0])
 
 visualizer.write_video_file()
 
