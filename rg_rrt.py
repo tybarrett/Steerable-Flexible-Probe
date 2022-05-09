@@ -129,7 +129,7 @@ class Rg_Rrt(object):
         while len(solved_trees) < REQUIRED_SOLUTIONS:
             # print("")
             # Generate a random point
-            new_point = self.generate_random_point(goal_coordinate)
+            new_point = self.generate_uniform_random_point()
             new_point_x, new_point_y = new_point
 
             # print("New Point: " + str(new_point))
@@ -144,7 +144,10 @@ class Rg_Rrt(object):
             for existing_node in sorted_existing:
 
                 # print("Generating a new path")
-                connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
+                if existing_node.coordinates == start_node.coordinates:
+                    connecting_points, arc_length = self.connect_with_line(existing_node, new_point)
+                else:
+                    connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
 
                 if connecting_points:
 
@@ -159,13 +162,15 @@ class Rg_Rrt(object):
                             # print("Warning - this arc goes through an obstacle")
                             break
 
-                        if not is_inside_brain:
-                            reached_goal = True
-                            print('reached goal')
-
                         risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0],
                                                                          point.coordinates[1])
                         point.accumulated_risk = point.parent_node.accumulated_risk + risk * self.risk_weight
+
+                        if not is_inside_brain:
+                            reached_goal = True
+                            solved_trees.append(self.backtrack(point))
+                            return solved_trees
+                            print('reached goal')
 
                     if not goes_through_obstacle:
                         points_and_lengths.append((connecting_points, arc_length))
@@ -200,6 +205,37 @@ class Rg_Rrt(object):
             new_point_x = 206 * random.random()
             new_point_y = 206 * random.random()
             return new_point_x, new_point_y
+
+
+    def generate_uniform_random_point(self):
+        new_point_x = 206 * random.random()
+        new_point_y = 206 * random.random()
+        return new_point_x, new_point_y
+
+
+    def connect_with_line(self, p1, p2):
+        x1, y1 = p1.coordinates
+        x2, y2 = p2
+
+        dx = (x2 - x1) / 40
+        dy = (y2 - y1) / 40
+
+        theta = math.atan2(dy, dx)
+        theta = theta * 180 / math.pi
+
+        points = []
+        prev_node = p1
+        for i in range(41):
+            newx = x1 + i * dx
+            newy = y1 + i * dy
+
+            new_node = NodeDescription((newx, newy), theta, parent_node=prev_node)
+            points.append(new_node)
+
+            prev_node = new_node
+
+        return points, self._get_distance(p1.coordinates, p2)
+
 
     def connect_with_curve(self, p1, p2):
 
