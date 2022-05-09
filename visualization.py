@@ -19,7 +19,7 @@ FRAMES_TO_SKIP = 0
 OUTPUT_VIDEO_NAME = "output.avi"
 OUTPUT_FPS = 30
 
-VISUALIZE = True
+VISUALIZE = False
 
 GSD = 5
 
