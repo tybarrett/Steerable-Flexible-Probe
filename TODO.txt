@@ -18,8 +18,8 @@ TODO for Steerable Flexible Probe
   + and do not allow movement if it is outside the brain
 
 TODO for Original Research
-- Change start point to be at the tumor
-- Change goal condition to be any place outside the brain
++ Change start point to be at the tumor
++ Change goal condition to be any place outside the brain
   - with a relatively orthogonal exit angle
 - Run multiple simulations to compare cost values
 

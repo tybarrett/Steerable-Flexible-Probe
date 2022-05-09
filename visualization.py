@@ -7,11 +7,11 @@ import numpy
 from obstacle_map import IN_OBSTACLE, IN_MARGIN
 
 
-OBSTACLE_COLOR = (33, 67, 101)
+OBSTACLE_COLOR = (255, 255, 255)
 MARGIN_COLOR = (95, 153, 211)
 PATH_COLOR = (20, 255, 57)
-FREE_UNEXPLORED_COLOR = (230, 216, 173)
-FREE_EXPLORED_COLOR = (150, 146, 92)
+FREE_UNEXPLORED_COLOR = (0, 0, 0)
+FREE_EXPLORED_COLOR = (255, 50, 50)
 LINE_THICKNESS = 2
 
 FRAMES_TO_SKIP = 0
@@ -53,6 +53,8 @@ class PathPlanningVisualizer(object):
         self.output_video = cv2.VideoWriter(OUTPUT_VIDEO_NAME, fourcc, OUTPUT_FPS, (self.canvas.shape[1], self.canvas.shape[0]))
 
         self._record_to_video()
+
+        print("Finished with obstacle map generation!")
 
 
     def draw_visited_node(self, visited_nodes):
