@@ -5,11 +5,9 @@ import math
 import closed_nodes_maintainer
 from node_description import NodeDescription
 
-
 GOAL_THRESHOLD = 0.15
-MIN_CURVATURE_RADIUS = 40 # TODO - choose a realistic value
+MIN_CURVATURE_RADIUS = 40  # TODO - choose a realistic value
 REQUIRED_SOLUTIONS = 1
-
 
 class Rg_Rrt(object):
     def __init__(self, obstacle_map, length_weight, clearance_weight, risk_weight):
@@ -21,7 +19,6 @@ class Rg_Rrt(object):
         # self.traverser = diff_drive_traverser.DiffDriveTraverser(obstacle_map, goal_coordinate)
 
         logging.basicConfig(level=logging.INFO)
-
 
     def generate_path(self, start_pose, goal_coordinate, update_callback):
         (start_x, start_y), theta = start_pose
@@ -37,7 +34,8 @@ class Rg_Rrt(object):
         solved_trees = []
 
         is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.obstacle_img,
-                                                                          start_node.coordinates[0], start_node.coordinates[1])
+                                                                          start_node.coordinates[0],
+                                                                          start_node.coordinates[1])
         is_inside_brain = self.obstacle_map.is_coordinate_inside(start_node.coordinates[0], start_node.coordinates[1])
         if is_coordinate_occupied or not is_inside_brain:
             print("Not a valid start point!")
@@ -53,7 +51,9 @@ class Rg_Rrt(object):
 
             # TODO - trim existing_nodes first before sorting it
             # sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
-            sorted_existing = sorted(existing_nodes, key=lambda node: node.cost_to_come + self._get_distance(node.coordinates, new_point))
+            sorted_existing = sorted(existing_nodes,
+                                     key=lambda node: node.cost_to_come + self._get_distance(node.coordinates,
+                                                                                             new_point))
 
             points_and_lengths = []
             for existing_node in sorted_existing:
@@ -65,14 +65,17 @@ class Rg_Rrt(object):
 
                     goes_through_obstacle = False
                     for point in connecting_points:
-                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.obstacle_img, point.coordinates[0], point.coordinates[1])
-                        is_inside_brain = self.obstacle_map.is_coordinate_inside(point.coordinates[0], point.coordinates[1])
+                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(
+                            self.obstacle_map.obstacle_img, point.coordinates[0], point.coordinates[1])
+                        is_inside_brain = self.obstacle_map.is_coordinate_inside(point.coordinates[0],
+                                                                                 point.coordinates[1])
                         if is_coordinate_occupied or not is_inside_brain:
                             goes_through_obstacle = True
                             # print("Warning - this arc goes through an obstacle")
                             break
 
-                        risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0], point.coordinates[1])
+                        risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0],
+                                                                         point.coordinates[1])
                         point.accumulated_risk = point.parent_node.accumulated_risk + risk * self.risk_weight
 
                     if not goes_through_obstacle:
@@ -97,6 +100,95 @@ class Rg_Rrt(object):
 
         return solved_trees
 
+    def original_research_generate_path(self, start_pose, goal_coordinate, update_callback):
+        (start_x, start_y), theta = start_pose  # We are starting from goal this time
+        (goal_x, goal_y) = goal_coordinate
+        count = 0
+        reached_goal = False
+
+        start_node = NodeDescription((start_x, start_y), theta)
+        existing_nodes = [start_node]
+
+        last_node = None
+
+        solved_trees = []
+
+        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(self.obstacle_map.obstacle_img,
+                                                                          start_node.coordinates[0],
+                                                                          start_node.coordinates[1])
+        if is_coordinate_occupied:
+            print("Not a valid start point!")
+            return [], 0
+
+        is_inside_brain = self.obstacle_map.is_coordinate_inside(start_node.coordinates[0],
+                                                                 start_node.coordinates[1])
+        if not is_inside_brain:
+            reached_goal = True
+            print('reached goal')
+
+        while len(solved_trees) < REQUIRED_SOLUTIONS:
+            # print("")
+            # Generate a random point
+            new_point = self.generate_random_point(goal_coordinate)
+            new_point_x, new_point_y = new_point
+
+            # print("New Point: " + str(new_point))
+
+            # TODO - trim existing_nodes first before sorting it
+            # sorted_existing = sorted(existing_nodes, key=lambda node: self._get_distance(node.coordinates, new_point))
+            sorted_existing = sorted(existing_nodes,
+                                     key=lambda node: node.cost_to_come + self._get_distance(node.coordinates,
+                                                                                             new_point))
+
+            points_and_lengths = []
+            for existing_node in sorted_existing:
+
+                # print("Generating a new path")
+                connecting_points, arc_length = self.connect_with_curve(existing_node, new_point)
+
+                if connecting_points:
+
+                    goes_through_obstacle = False
+                    for point in connecting_points:
+                        is_coordinate_occupied = self.obstacle_map.is_coordinate_occupied(
+                            self.obstacle_map.obstacle_img, point.coordinates[0], point.coordinates[1])
+                        is_inside_brain = self.obstacle_map.is_coordinate_inside(point.coordinates[0],
+                                                                                 point.coordinates[1])
+                        if is_coordinate_occupied:
+                            goes_through_obstacle = True
+                            # print("Warning - this arc goes through an obstacle")
+                            break
+
+                        if not is_inside_brain:
+                            reached_goal = True
+                            print('reached goal')
+
+                        risk = self.obstacle_map.get_cost_for_coordinate(self.obstacle_map.img, point.coordinates[0],
+                                                                         point.coordinates[1])
+                        point.accumulated_risk = point.parent_node.accumulated_risk + risk * self.risk_weight
+
+                    if not goes_through_obstacle:
+                        points_and_lengths.append((connecting_points, arc_length))
+
+            # sorted(points_and_lengths, key=lambda x: x[1])
+            if len(points_and_lengths):
+                # print("Found a path that is " + str(points_and_lengths[0][1]) + " units long")
+                shortest_path = points_and_lengths[0][0]
+                terminal_node = shortest_path[-1]
+                existing_nodes.append(terminal_node)
+                # print("Adding a new node to the existing_nodes with a theta of " + str(terminal_node.theta))
+                update_callback(points_and_lengths[0][0])
+
+                if reached_goal:
+                    first_node = shortest_path[0]
+                    parent = first_node.parent_node
+                    existing_nodes.remove(parent)
+
+                    solved_trees.append(self.backtrack(terminal_node))
+                    print(self.backtrack(terminal_node))
+                    # return self.backtrack(terminal_node), 0 # TODO - put a cost here
+
+        return solved_trees
 
     def generate_random_point(self, goal_coordinate):
         randomly_chose_goal = random.random() < 0.2
@@ -158,7 +250,7 @@ class Rg_Rrt(object):
         next_point = (x_intersect + radius * math.cos(angle), y_intersect + radius * math.sin(angle))
         angle_of_movement = math.atan2(next_point[1] - y1, next_point[0] - x1)
         if abs(angle_of_movement - theta1 * math.pi / 180) > math.pi / 2:
-            print("We are moving in the wrong direction!")
+            # print("We are moving in the wrong direction!")
             # if angle_to_p1 < 0:
             #     angle_to_p1 += math.pi * 2
             # if angle_to_p2 < 0:
@@ -174,7 +266,7 @@ class Rg_Rrt(object):
             new_x = x_intersect + radius * math.cos(angle)
             new_y = y_intersect + radius * math.sin(angle)
 
-            tip_angle = angle + (math.pi / 2) * (d_angle/abs(d_angle))
+            tip_angle = angle + (math.pi / 2) * (d_angle / abs(d_angle))
             tip_degrees = tip_angle * 180 / math.pi
             if tip_degrees > 180:
                 tip_degrees -= 360
@@ -190,11 +282,11 @@ class Rg_Rrt(object):
         prev_node = p1
         for pt in points:
             pt.parent_node = prev_node
-            pt.cost_to_come = prev_node.cost_to_come + self._get_distance(prev_node.coordinates, pt.coordinates) * self.length_weight
+            pt.cost_to_come = prev_node.cost_to_come + self._get_distance(prev_node.coordinates,
+                                                                          pt.coordinates) * self.length_weight
             prev_node = pt
 
         return points, radius * abs(angle_to_p1 - angle_to_p2)
-
 
     def _reverse_points_if_necessary(self, points, start_point):
         first_pt = points[0]
@@ -205,12 +297,10 @@ class Rg_Rrt(object):
         if first_dist_to_pt > last_dist_to_pt:
             points.reverse()
 
-
     def _get_distance(self, p1, p2):
         dx = p1[0] - p2[0]
         dy = p1[1] - p2[1]
-        return math.sqrt(dx**2 + dy**2)
-
+        return math.sqrt(dx ** 2 + dy ** 2)
 
     def backtrack(self, goal_node):
         backtrack_nodes = []
